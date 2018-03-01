@@ -1,0 +1,35 @@
+- start: Buenos Aires
+  end: New York
+  journey_time: 6
+
+- start: Buenos Aires
+  end: Casablanca
+  journey_time: 5
+
+- start: Buenos Aires
+  end: Cape Town
+  journey_time: 4
+
+- start: New York
+  end: Liverpool
+  journey_time: 4
+
+- start: Liverpool
+  end: Casablanca
+  journey_time: 3
+
+- start: Liverpool
+  end: Cape Town
+  journey_time: 6
+
+- start: Casablanca
+  end: Liverpool
+  journey_time: 3
+
+- start: Casablanca
+  end: Cape Town
+  journey_time: 6
+
+- start: Cape Town
+  end: New York
+  journey_time: 8
