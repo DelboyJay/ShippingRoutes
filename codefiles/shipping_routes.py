@@ -15,6 +15,7 @@ class RouteManager:
 
     def __init__(self):
         self.routes = None
+        self.mapped_routes = None
 
     def get_direct_route_time(self, destinations):
         """
@@ -46,15 +47,38 @@ class RouteManager:
         """
         return 0
 
-    def get_all_routes(self, start_port, end_port):
+    def get_all_routes(self, start_port, end_port, prev_state=None):
         """
         Returns a list of a list of routes.
         :param start_port: The start port
         :param end_port: The final port destination
+        :param prev_state: because this is a recursive function we need a way of remembering the previous state
+                           This variable is a list of strings that holds the ports that we have visited thus far.
         :return: list of list of strings
         """
-        port_hash = {f["start"] for f in self.routes}
-        return []
+        # If this is the first time the function has been called then just add the starting port to a list.
+        if prev_state is None:
+            prev_state = [start_port]
+
+        valid_routes = []
+        if self.mapped_routes.get(start_port) is None:
+            raise InvalidPortName(
+                "The port name %s is not valid. NOTE: Port names are also case sensitive." % start_port, start_port)
+
+        for dst_port_info in self.mapped_routes[start_port]:
+            # This check detect when we have reached our destination and adds it to our list of valid routes
+            if dst_port_info["end"] == end_port:
+                valid_routes.append(prev_state + [end_port])
+                continue
+            # This check stops us looping around forever. If we reach a destination that we have already visited then
+            # we skip the route
+            if dst_port_info["end"] in prev_state:
+                continue
+            # Get all possible routes that may or may not reach the intended destination
+            valid_routes.extend(
+                self.get_all_routes(dst_port_info["end"], end_port, prev_state + [dst_port_info["end"]]))
+
+        return valid_routes
 
     def get_number_of_routes(self, start_port, end_port, fn_count_filter):
         """
@@ -66,7 +90,7 @@ class RouteManager:
         """
         return 0
 
-    def load_data(self, filename):
+    def load_routes(self, filename):
         """
         Load route data from a YAML file
         :param filename: yaml filename
@@ -74,11 +98,25 @@ class RouteManager:
         """
         with open(filename) as han:
             self.routes = yaml.load(han)
+        self._get_all_port_destinations()
+
+    def set_routes(self, routes_list):
+        self.routes = routes_list
+        self._get_all_port_destinations()
+
+    def _get_all_port_destinations(self):
+        """
+        Creates a dictionary where the keys are all of the ports you can start from and the values are a list of
+        destinations and times to the next port.
+        :return: dict
+        """
+        self.mapped_routes = {route["start"]: [route2 for route2 in self.routes if route2["start"] == route["start"]]
+                              for route in self.routes}
 
 
 def main():
     rm = RouteManager()
-    rm.load_data("test_files/routes.yml")
+    rm.load_routes("test_files/routes.yml")
     pass
 
 

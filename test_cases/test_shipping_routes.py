@@ -12,7 +12,7 @@ class TestCaseShippintRoutes(unittest.TestCase):
         # Load the pre-defined routes
         path, _ = os.path.split(__file__)
         path = os.path.join(path, "../test_files/routes.yml")
-        self.rm.load_data(path)
+        self.rm.load_routes(path)
 
     def tearDown(self):
         pass
@@ -35,14 +35,75 @@ class TestCaseShippintRoutes(unittest.TestCase):
         with self.assertRaises(InvalidRouteError):
             self.rm.get_direct_route_time(["Buenos Aires", "Cape Town", "Casablanca"])
 
-    def test_get_all_routes(self):
-        results = [
-            ["Buenos Aires", "Casablanca"],
-            ["Buenos Aires", "New York", "Liverpool", "Casablanca"],
-            ["Buenos Aires", "Cape Town", "New York", "Liverpool", "Casablanca"],
-            ["Buenos Aires", "New York", "Liverpool", "Cape Town", "Casablanca"],
+    def test_get_all_routes_simple_1_set_1_route(self):
+        data = [{"start": "Buenos Aires", "end": "New York", "journey_time": 6}, ]
+        rm = RouteManager()
+        rm.set_routes(data)
+        a = rm.get_all_routes("Buenos Aires", "New York")
+        self.assertListEqual([["Buenos Aires", "New York"]], a)
+
+    def test_get_all_routes_simple_1_set_2_routes(self):
+        data = [
+            {"start": "Buenos Aires", "end": "New York", "journey_time": 6},
+            {"start": "New York", "end": "Liverpool", "journey_time": 4},
         ]
-        self.assertListEqual(results, self.rm.get_all_routes("Buenos Aires", "Casablanca"))
+        rm = RouteManager()
+        rm.set_routes(data)
+        a = rm.get_all_routes("Buenos Aires", "Liverpool")
+        self.assertListEqual([["Buenos Aires", "New York", "Liverpool"]], a)
+
+    def test_get_all_routes_simple_2_sets_of_2_route(self):
+        data = [
+            {"start": "Buenos Aires", "end": "New York", "journey_time": 6},
+            {"start": "New York", "end": "Liverpool", "journey_time": 4},
+            {"start": "Buenos Aires", "end": "Casablanca", "journey_time": 5},
+            {"start": "Casablanca", "end": "Liverpool", "journey_time": 3},
+        ]
+        rm = RouteManager()
+        rm.set_routes(data)
+        a = rm.get_all_routes("Buenos Aires", "Liverpool")
+        self.assertListEqual([
+            ["Buenos Aires", "New York", "Liverpool"],
+            ["Buenos Aires", "Casablanca", "Liverpool"],
+        ], a)
+
+    def test_get_all_routes_round_trip(self):
+        data = [
+            {"start": "Liverpool", "end": "Casablanca", "journey_time": 3},
+            {"start": "Casablanca", "end": "Liverpool", "journey_time": 3},
+        ]
+        rm = RouteManager()
+        rm.set_routes(data)
+        a = rm.get_all_routes("Liverpool", "Liverpool")
+        self.assertListEqual([
+            ["Liverpool", "Casablanca", "Liverpool"]
+        ], a)
+
+    def test_get_all_routes_Invalid_port_name(self):
+        rm = RouteManager()
+        rm.set_routes([])
+        with self.assertRaises(InvalidPortName):
+            rm.get_all_routes("Buenos Aires", "Casablanca")
+
+    def test_get_all_routes_3_sets_multiple_routes(self):
+        results = [
+            ["Buenos Aires", "New York", "Liverpool", "Casablanca"],
+            ["Buenos Aires", "Casablanca"],
+            ["Buenos Aires", "Cape Town", "New York", "Liverpool", "Casablanca"],
+        ]
+        a = self.rm.get_all_routes("Buenos Aires", "Casablanca")
+        self.assertListEqual(results, a)
+
+    def test_liverpool_to_liverpool_tests(self):
+        results = [
+            ['Liverpool', 'Casablanca', 'Liverpool'],
+            ['Liverpool', 'Casablanca', 'Cape Town', 'New York', 'Liverpool'],
+            ['Liverpool', 'Cape Town', 'New York', 'Liverpool'],
+        ]
+        routes = self.rm.get_all_routes("Liverpool", "Liverpool")
+        self.assertListEqual(results, routes)
+        times = [self.rm.get_direct_route_time(f) for f in routes]
+        self.assertListEqual([6, 21, 18], times)
 
     def test_shortest_journey(self):
         self.assertEqual(8, self.rm.get_shortest_journey("Buenos Aires", "Liverpool"))
