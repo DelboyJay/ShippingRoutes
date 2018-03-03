@@ -7,4 +7,4 @@ COPY . /opt/shipping_routes/
 
 RUN pip3 install -r requirements.txt
 
-CMD ["python3", "code/shipping_routes.py"]
+CMD ["python3", "-m", "unittest", "test_cases/test_shipping_routes.py"]
