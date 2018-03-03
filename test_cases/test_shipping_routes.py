@@ -112,10 +112,12 @@ class TestCaseShippintRoutes(unittest.TestCase):
             self.rm.get_shortest_journey("foobar", "New York")
 
     def test_find_number_of_routes(self):
-        self.assertEqual(8, self.rm.get_number_of_routes("Liverpool", "Liverpool", lambda x: x == 3))
-        self.assertEqual(8, self.rm.get_number_of_routes("Buenos Aires", "Liverpool", lambda x: x == 4))
-        self.assertEqual(8, self.rm.get_number_of_routes("Liverpool", "Liverpool", lambda x: x <= 25))
-        self.assertRaises(InvalidPortName, self.rm.get_number_of_routes("foobar", "New York", lambda x: x == 1))
+        self.assertEqual(1, self.rm.get_number_of_routes("Liverpool", "Liverpool", lambda x: x == 3))
+        self.assertEqual(1, self.rm.get_number_of_routes("Buenos Aires", "Liverpool", lambda x: x == 4))
+        self.assertEqual(3, self.rm.get_number_of_routes("Liverpool", "Liverpool", lambda x: x <= 25))
+        self.assertEqual(None, self.rm.get_number_of_routes("Liverpool", "Liverpool", lambda x: x == 2))
+        with self.assertRaises(InvalidPortName):
+            self.rm.get_number_of_routes("foobar", "New York", lambda x: x == 1)
 
 
 if __name__ == '__main__':

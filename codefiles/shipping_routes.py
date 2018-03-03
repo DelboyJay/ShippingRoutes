@@ -89,7 +89,11 @@ class RouteManager:
         :param fn_count_filter: a lambda function that allows for data filtering
         :return: The shortest number of days for the entire journey
         """
-        return 0
+        routes = self.get_all_routes(start_port, end_port)
+        a = [route for route in routes if fn_count_filter(len(route))]
+        if len(a) == 0:
+            return None
+        return len(a)
 
     def load_routes(self, filename):
         """
