@@ -108,7 +108,8 @@ class TestCaseShippintRoutes(unittest.TestCase):
     def test_shortest_journey(self):
         self.assertEqual(8, self.rm.get_shortest_journey("Buenos Aires", "Liverpool"))
         self.assertEqual(18, self.rm.get_shortest_journey("New York", "New York"))
-        self.assertRaises(InvalidPortName, self.rm.get_shortest_journey("foobar", "New York"))
+        with self.assertRaises(InvalidPortName):
+            self.rm.get_shortest_journey("foobar", "New York")
 
     def test_find_number_of_routes(self):
         self.assertEqual(8, self.rm.get_number_of_routes("Liverpool", "Liverpool", lambda x: x == 3))

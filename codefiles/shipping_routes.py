@@ -45,7 +45,8 @@ class RouteManager:
         :param end_port: name of the End port
         :return: The shortest number of days for the entire journey
         """
-        return 0
+        routes = self.get_all_routes(start_port, end_port)
+        return min([self.get_direct_route_time(f) for f in routes])
 
     def get_all_routes(self, start_port, end_port, prev_state=None):
         """
