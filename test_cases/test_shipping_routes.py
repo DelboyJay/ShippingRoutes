@@ -1,7 +1,12 @@
 import os
+import sys
 import unittest
 
-from codefiles.shipping_routes import RouteManager, InvalidRouteError, InvalidPortName
+# This line ensures that we can refer to the codefiles folder as a source root
+sys.path.append(os.path.abspath(os.path.join(os.path.abspath(os.path.split(__file__)[0]), "../codefiles")))
+
+from exceptions import InvalidRouteError, InvalidPortName
+from route_manager import RouteManager
 
 
 class TestCaseShippintRoutes(unittest.TestCase):

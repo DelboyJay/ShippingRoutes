@@ -12,7 +12,7 @@ Shipping routes requires python 3 and the following software:
 
 INSTALLATION
 ------------------------------------------------------------------------
-To install the required packages run the following:
+To install the required packages, run the following:
 
 * pip install virtualenv
 * virtualenv venv
@@ -33,3 +33,8 @@ Or you can use the docker file:
 ROUTE DATA
 ------------------------------------------------------------------------
 The route data can be modified in the file test_files/routes.yml
+
+Each item has three pieces of information: a start, end and journey_time and should be specified in the file as follows:
+- start: <starting port name>
+  end: <final destination port name>
+  journey_time: <time in days to get from start to end mentioned above.
