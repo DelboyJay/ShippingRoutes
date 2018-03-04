@@ -135,6 +135,23 @@ class TestCaseShippintRoutes(unittest.TestCase):
         with self.assertRaises(InvalidPortName):
             self.rm.get_number_of_routes("foobar", "New York", lambda x: x == 1)
 
+    def test_get_route_data_with_criteria_length_check(self):
+        results = [
+            ["Buenos Aires", "New York", "Liverpool", "Casablanca"],
+            ["Buenos Aires", "Casablanca"],
+        ]
+        self.assertListEqual(results,
+                             self.rm.get_route_data_with_criteria("Buenos Aires", "Casablanca", lambda x: len(x) <= 4))
+
+    def test_get_route_data_with_criteria_time_check(self):
+        results = [
+            ["Buenos Aires", "New York", "Liverpool", "Casablanca"],
+            ["Buenos Aires", "Casablanca"],
+        ]
+        self.assertListEqual(results,
+                             self.rm.get_route_data_with_criteria("Buenos Aires", "Casablanca",
+                                                                  lambda x: self.rm.get_direct_route_time(x) <= 15))
+
 
 if __name__ == '__main__':
     unittest.main()

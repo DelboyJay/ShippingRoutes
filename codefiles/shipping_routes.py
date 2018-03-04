@@ -18,6 +18,10 @@ class InvalidRouteError(Exception):
 
 
 class RouteManager:
+    """
+    The Route Manager class
+    This class manages the route data and provides functions to extract useful information.
+    """
 
     def __init__(self):
         self.routes = None
@@ -122,6 +126,18 @@ class RouteManager:
         self._get_mapped_routes()
         self._get_all_port_names()
 
+    def get_route_data_with_criteria(self, start_port, target_port, fn_criteria):
+        """
+        Filter all routes between source and target ports given a criteria function
+        :param start_port: The port name to start form
+        :param target_port: The target port name
+        :param fn_criteria: A function that returns true when a route should be returned given a route object in the
+        form of:
+        {"start": "<name>", "end":"<name>", "journey_time": <time in days>}
+        :return: list of routes.
+        """
+        return [route for route in self.get_all_routes(start_port, target_port) if fn_criteria(route)]
+
     def _get_all_port_names(self):
         """
         Gets a complete list of all start and end port names
@@ -185,7 +201,8 @@ def process_command_line():
     :return:
     """
     parser = argparse.ArgumentParser("")
-    parser.add_argument("-l", "--log-filename", dest="log_filename", help="Specify the output log filename.")
+    parser.add_argument("-l", "--log-filename", dest="log_filename", help="Specify the output log filename.",
+                        default=None)
     parser.add_argument(dest="routes_filename",
                         help="Specify the filename of a yml file that contains all of the routes.")
 
@@ -284,6 +301,38 @@ def show_routes(args, **kwargs):
     log.info(message)
 
 
+def _create_lambda_criteria(criteria):
+    """
+    Creates a simple integer check lambda function given an operator-value string.
+    Example "<=5",  "!=3", ">4" or "==7" etc
+    :param criteria: A criteria string in the form of (==|!=|<=|>=|<|>)[\d]+
+    :return: A lambda function.
+    """
+
+    # Limit what the user can specify as the criteria string. If the user is not from a trusted source then this
+    # code can be used to limit what they can execute to ensure it is safe to execute
+    m = re.search("(==|!=|<=|>=|<|>)[\d]+", criteria)
+    if not m:
+        raise ValueError("The search criteria is limited to the form (==|!=|<=|>=|<|>)[\d]+", criteria)
+
+    # WARNING: This following could be dangerous because it executes a string as python code from the user.
+    # Therefore it is assumed that this call is from a trusted source. The regex check above will increase safety
+    # however.
+    return eval("lambda x:x%s" % criteria)
+
+
+def _get_route_with_criteria(start_port, target_port, criteria_str, fn_criteria, route_manager):
+    log = get_logger()
+    message = "The routes between %s and %s with the criteria 'Route length %s' are:\n" % (
+        start_port, target_port, criteria_str)
+    fn_base_criteria = _create_lambda_criteria(criteria_str)
+    for route in route_manager.get_route_data_with_criteria(start_port, target_port,
+                                                            lambda x: fn_base_criteria(fn_criteria(x))):
+        full_journey = " => ".join(route)
+        message += "\t%s   Total days: %s\n" % (full_journey, route_manager.get_direct_route_time(route))
+    log.info(message)
+
+
 def route_length_with_criteria(args, **kwargs):
     """
     Show the routes given the start and target port that meet the specified criteria
@@ -291,28 +340,8 @@ def route_length_with_criteria(args, **kwargs):
     :param kwargs: should always contain a key called "route_manager" which points to a RouteManager object
     :return: None
     """
-    log = get_logger()
     rm = kwargs["route_manager"]
-    assert isinstance(rm, RouteManager)
-    routes = rm.get_all_routes(args.start_port, args.target_port)
-
-    # Limit what the user can specify as the criteria string. If the user is not from a trusted source then this
-    # code can be used to limit what they can execute to ensure it is safe to execute
-    m = re.search("(==|!=|<=|>=|<|>)[\d]+", args.criteria)
-    if not m:
-        raise ValueError("The search criteria is limited to the form (==|!=|<=|>=|<|>)[\d]+", args.criteria)
-
-    # WARNING: This following could be dangerous because it executes a string as python code from the user.
-    # Therefore it is assumed that this call is from a trusted source. The regex check above will increase safety
-    # however.
-    criteria = eval("lambda x:x%s" % args.criteria)
-
-    message = "The routes between %s and %s with the criteria 'Route length %s' are:\n" % (
-        args.start_port, args.target_port, args.criteria)
-    for route in [route for route in routes if criteria(len(route))]:
-        full_journey = " => ".join(route)
-        message += "\t%s   Total days: %s\n" % (full_journey, rm.get_direct_route_time(route))
-    log.info(message)
+    _get_route_with_criteria(args.start_port, args.target_port, args.criteria, len, rm)
 
 
 def route_time_with_criteria(args, **kwargs):
@@ -322,35 +351,18 @@ def route_time_with_criteria(args, **kwargs):
     :param kwargs: should always contain a key called "route_manager" which points to a RouteManager object
     :return: None
     """
-    log = get_logger()
     rm = kwargs["route_manager"]
-    assert isinstance(rm, RouteManager)
-    routes = rm.get_all_routes(args.start_port, args.target_port)
-
-    # Limit what the user can specify as the criteria string. If the user is not from a trusted source then this
-    # code can be used to limit what they can execute to ensure it is safe to execute
-    m = re.search("(==|!=|<=|>=|<|>)[\d]+", args.criteria)
-    if not m:
-        raise ValueError("The search criteria is limited to the form (==|!=|<=|>=|<|>)[\d]+", args.criteria)
-
-    # WARNING: This following could be dangerous because it executes a string as python code from the user.
-    # Therefore it is assumed that this call is from a trusted source. The regex check above will increase safety
-    # however.
-    criteria = eval("lambda x:x%s" % args.criteria)
-
-    message = "The routes between %s and %s with the criteria 'Route total time %s' are:\n" % (
-        args.start_port, args.target_port, args.criteria)
-    for route in [route for route in routes if criteria(rm.get_direct_route_time(route))]:
-        full_journey = " => ".join(route)
-        message += "\t%s   Total days: %s\n" % (full_journey, rm.get_direct_route_time(route))
-    log.info(message)
+    _get_route_with_criteria(args.start_port, args.target_port, args.criteria, rm.get_direct_route_time, rm)
 
 
 def main():
     """Main Loop"""
-    log = setup_logging()
+
+    # Set default logger until we can construct a proper one after processing the command line.
+    log = get_logger()
     try:
         args = process_command_line()
+        log = setup_logging(args.log_filename)
         rm = RouteManager()
         rm.load_routes(args.routes_filename)
         args.func(args, route_manager=rm)
