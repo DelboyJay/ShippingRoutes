@@ -70,9 +70,6 @@ def process_command_line():
         "%s v%s - This script provides information on shipping routes." % (get_script_name(), get_version()))
     parser.add_argument("-l", "--log-filename", dest="log_filename", help="Specify the output log filename.",
                         default=None)
-    parser.add_argument(dest="routes_filename",
-                        help="Specify the filename of a yml file that contains all of the routes.")
-
     subparsers = parser.add_subparsers(help='sub-command help')
 
     drt_parser = subparsers.add_parser("direct-route-time", help="Find out the total time for a specific route.")
@@ -111,6 +108,9 @@ def process_command_line():
                                                   'the criteria in quotes to avoid it being misinterpreted by the '
                                                   'command line processor.')
     rwt_parser.set_defaults(func=route_time_with_criteria)
+
+    parser.add_argument(dest="routes_filename",
+                        help="Specify the filename of a yml file that contains all of the routes.")
 
     return parser.parse_args()
 
@@ -188,10 +188,20 @@ def _create_lambda_criteria(criteria):
     return eval("lambda x:x%s" % criteria)
 
 
-def _get_route_with_criteria(start_port, target_port, criteria_str, fn_criteria, route_manager):
+def _get_route_with_criteria(start_port, target_port, criteria_str, fn_criteria, route_manager, metric_str):
+    """
+    Gets a list of routes based on a criteria
+    :param start_port:  The start port
+    :param target_port:  The target port
+    :param criteria_str: The string criteria from the user i.e. "<=10"
+    :param fn_criteria: A criteria function to filter the results
+    :param route_manager: The route manager object
+    :param metric_str: The metric string to display to the user that explains what is being shown.
+    :return: None
+    """
     log = get_logger()
-    message = "The routes between %s and %s with the criteria 'Route length %s' are:\n" % (
-        start_port, target_port, criteria_str)
+    message = "The routes between %s and %s with the criteria '%s' are:\n" % (
+        start_port, target_port, metric_str)
     fn_base_criteria = _create_lambda_criteria(criteria_str)
     for route in route_manager.get_route_data_with_criteria(start_port, target_port,
                                                             lambda x: fn_base_criteria(fn_criteria(x))):
@@ -208,7 +218,8 @@ def route_length_with_criteria(args, **kwargs):
     :return: None
     """
     rm = kwargs["route_manager"]
-    _get_route_with_criteria(args.start_port, args.target_port, args.criteria, len, rm)
+    _get_route_with_criteria(args.start_port, args.target_port, args.criteria, len, rm,
+                             "Routes with %s stops." % args.criteria)
 
 
 def route_time_with_criteria(args, **kwargs):
@@ -219,7 +230,8 @@ def route_time_with_criteria(args, **kwargs):
     :return: None
     """
     rm = kwargs["route_manager"]
-    _get_route_with_criteria(args.start_port, args.target_port, args.criteria, rm.get_direct_route_time, rm)
+    _get_route_with_criteria(args.start_port, args.target_port, args.criteria, rm.get_direct_route_time, rm,
+                             "Routes that have a journey time %s days." % args.criteria)
 
 
 def main():
