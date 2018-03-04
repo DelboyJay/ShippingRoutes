@@ -79,11 +79,27 @@ class TestCaseShippintRoutes(unittest.TestCase):
             ["Liverpool", "Casablanca", "Liverpool"]
         ], a)
 
-    def test_get_all_routes_Invalid_port_name(self):
+    def test_get_all_routes_Invalid_port_names_1(self):
+        """No ports specified"""
         rm = RouteManager()
         rm.set_routes([])
         with self.assertRaises(InvalidPortName):
             rm.get_all_routes("Buenos Aires", "Casablanca")
+
+    def test_get_all_routes_Invalid_port_names_2(self):
+        """Start port name invalid"""
+        with self.assertRaises(InvalidPortName):
+            self.rm.get_all_routes("Buenos Airesa", "Casablanca")
+
+    def test_get_all_routes_Invalid_port_names_3(self):
+        """Target port name invalid"""
+        with self.assertRaises(InvalidPortName):
+            self.rm.get_all_routes("Buenos Aires", "Casablancaa")
+
+    def test_get_all_routes_Invalid_port_names_4(self):
+        """Both port names are invalid"""
+        with self.assertRaises(InvalidPortName):
+            self.rm.get_all_routes("Buenos Airesa", "Casablancaa")
 
     def test_get_all_routes_3_sets_multiple_routes(self):
         results = [
