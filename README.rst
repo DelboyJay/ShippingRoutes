@@ -36,7 +36,7 @@ The route data can be modified in the file test_files/routes.yml
 
 Each item has three pieces of information: a start, end and journey_time and should be specified in the file as follows:
 
-   - start: <starting port name>
+   \- start: <starting port name>
 
      end: <final destination port name>
 
