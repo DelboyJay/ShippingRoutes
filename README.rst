@@ -35,9 +35,12 @@ ROUTE DATA
 The route data can be modified in the file test_files/routes.yml
 
 Each item has three pieces of information: a start, end and journey_time and should be specified in the file as follows:
-- start: <starting port name>
-  end: <final destination port name>
-  journey_time: <time in days to get from start to end mentioned above.
+
+   - start: <starting port name>
+
+     end: <final destination port name>
+
+     journey_time: <time in days to get from start to end mentioned above.
 
 USAGE
 ------------------------------------------------------------------------
@@ -49,9 +52,13 @@ The script's command line help can be obtained using the following:
 There are five commands that can be used with this script. Their names and meanings are as follows:
 
 ``direct-route-time``: Given a list of destinations find the total journey time
+
 ``shortest-route``: Given a start and target route, find the journey with the shortest number of hops.
+
 ``show-routes``: Given a start and target route, show all of the possible journey combinations.
+
 ``routes-with-stops``: Given a start and target route, show only those routes whose number of hops fulfills the conditional criteria set.
+
 ``routes-with-time``: Given a start and target route, show only those routes whose totel journey time fulfills the conditional criteria set.
 
 To get help on a specific command type:
@@ -65,29 +72,29 @@ Here are a list of the original questions and the command line in order to obtai
 1) What is the total journey time for the following direct routes (your model should
 indicate if the journey is invalid):
 
-1a) Buenos Aires  New York  Liverpool
+1a) Buenos Aires => New York => Liverpool
 
 * python3 shipping_routes.py direct-route-time "Buenos Aires" "New York" Liverpool ../test_files/routes.yml
 
-1b) Buenos Aires  Casablanca  Liverpool
+1b) Buenos Aires => Casablanca => Liverpool
 
 * python3 shipping_routes.py direct-route-time "Buenos Aires" "Casablanca" Liverpool ../test_files/routes.yml
 
-1c) Buenos Aires  Cape Town  New York  Liverpool  Casablanca
+1c) Buenos Aires => Cape Town => New York => Liverpool  Casablanca
 
 * python3 shipping_routes.py direct-route-time "Buenos Aires" "Cape Town" "New York" Liverpool Casablanca ../test_files/routes.yml
 
-1d) Buenos Aires  Cape Town  Casablanca
+1d) Buenos Aires => Cape Town => Casablanca
 
 * python3 shipping_routes.py direct-route-time "Buenos Aires" "Cape Town" Casablanca ../test_files/routes.yml
 
 2) Find the shortest journey time for the following routes:
 
-2a) Buenos Aires  Liverpool
+2a) Buenos Aires => Liverpool
 
 * python3 shipping_routes.py shortest-route "Buenos Aires" Liverpool ../test_files/routes.yml
 
-2b) New York  New York
+2b) New York => New York
 
 * python3 shipping_routes.py shortest-route "New York" "New York" ../test_files/routes.yml
 
